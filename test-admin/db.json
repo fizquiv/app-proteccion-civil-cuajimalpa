@@ -1,0 +1,105 @@
+{
+  "users": [
+    { "id": 1, "username": "juan", "password": "1234", "role": "colaborador", "turnoId": 1 },
+    { "id": 2, "username": "maria", "password": "1234", "role": "jefe_turno", "turnoId": 1 },
+    { "id": 3, "username": "admin", "password": "admin", "role": "administrador", "turnoId": 1},
+    { "id": 4, "username": "carlos", "password": "1234", "role": "colaborador", "turnoId": 2 },
+    { "id": 5, "username": "laura", "password": "1234", "role": "colaborador", "turnoId": 2 },
+    { "id": 6, "username": "sofia", "password": "1234", "role": "jefe_turno", "turnoId": 2 },
+    { "id": 7, "username": "pedro", "password": "1234", "role": "colaborador", "turnoId": 3 },
+    { "id": 8, "username": "diego", "password": "1234", "role": "colaborador", "turnoId": 3 },
+    { "id": 9, "username": "valeria", "password": "1234", "role": "jefe_turno", "turnoId": 3 }
+  ],
+  "turnos": [
+    { "id": 1, "nombre": "Turno Matutino", "colaboradores": [1] },
+    { "id": 2, "nombre": "Turno Vespertino", "colaboradores": [4, 5] },
+    { "id": 3, "nombre": "Turno Nocturno", "colaboradores": [7, 8] }
+  ],
+  "reportes": [
+    {
+      "id": 1,
+      "folio": "R-0001",
+      "fecha": "2025-09-19",
+      "hora": "09:15",
+      "colaboradorId": 1,
+      "turnoId": 1,
+      "paciente": { "nombre": "Carlos Pérez", "sexo": "masculino", "edad": 34 },
+      "tipoEmergencia": "accidente vial",
+      "gravedad": "alta",
+      "ubicacion": "Av. Santa Fe y Vasco de Quiroga",
+      "ambulancia": { "numero": "AMB-01", "operador": "Luis García" },
+      "insumos": [
+        { "id": 1, "nombre": "Oxígeno", "cantidad": 1 },
+        { "id": 2, "nombre": "Gasa", "cantidad": 5 }
+      ],
+      "observaciones": "Paciente estabilizado y trasladado al hospital ABC"
+    },
+    {
+      "id": 2,
+      "folio": "R-0002",
+      "fecha": "2025-09-19",
+      "hora": "15:20",
+      "colaboradorId": 4,
+      "turnoId": 2,
+      "paciente": { "nombre": "Ana Gómez", "sexo": "femenino", "edad": 27 },
+      "tipoEmergencia": "incendio",
+      "gravedad": "media",
+      "ubicacion": "Col. Contadero",
+      "ambulancia": { "numero": "AMB-02", "operador": "Raúl Torres" },
+      "insumos": [
+        { "id": 3, "nombre": "Camilla", "cantidad": 1 },
+        { "id": 4, "nombre": "Medicamentos", "cantidad": 2 }
+      ],
+      "observaciones": "Paciente con quemaduras leves, trasladada a hospital IMSS"
+    },
+    {
+      "id": 3,
+      "folio": "R-0003",
+      "fecha": "2025-09-20",
+      "hora": "01:10",
+      "colaboradorId": 7,
+      "turnoId": 3,
+      "paciente": { "nombre": "Luis Hernández", "sexo": "masculino", "edad": 45 },
+      "tipoEmergencia": "enfermedad súbita",
+      "gravedad": "alta",
+      "ubicacion": "Casa habitación, Col. San Mateo",
+      "ambulancia": { "numero": "AMB-03", "operador": "Marcos Rivera" },
+      "insumos": [
+        { "id": 1, "nombre": "Oxígeno", "cantidad": 2 },
+        { "id": 5, "nombre": "Desfibrilador", "cantidad": 1 }
+      ],
+      "observaciones": "Paciente con paro cardiorrespiratorio, reanimado y hospitalizado"
+    },
+    {
+      "id": 4,
+      "folio": "R-0004",
+      "fecha": "2025-09-21",
+      "hora": "08:00",
+      "colaboradorId": 1,
+      "turnoId": 1,
+      "paciente": { "nombre": "María López", "sexo": "femenino", "edad": 60 },
+      "tipoEmergencia": "traslado",
+      "gravedad": "baja",
+      "ubicacion": "Clínica ISSSTE",
+      "ambulancia": { "numero": "AMB-01", "operador": "Luis García" },
+      "insumos": [],
+      "observaciones": "Traslado programado a hospital general"
+    }
+  ],
+  "insumos": [
+    { "id": 1, "nombre": "Oxígeno" },
+    { "id": 2, "nombre": "Gasa" },
+    { "id": 3, "nombre": "Camilla" },
+    { "id": 4, "nombre": "Medicamentos" },
+    { "id": 5, "nombre": "Desfibrilador" },
+    { "id": 6, "nombre": "Sueros" },
+    { "id": 7, "nombre": "Guantes" },
+    { "id": 8, "nombre": "Collarín cervical" }
+  ],
+  "logs": [
+    { "id": 1, "accion": "crear_reporte", "usuario": "juan", "fecha": "2025-09-19T09:20:00", "detalle": "Reporte folio R-0001 creado" },
+    { "id": 2, "accion": "crear_reporte", "usuario": "carlos", "fecha": "2025-09-19T15:25:00", "detalle": "Reporte folio R-0002 creado" },
+    { "id": 3, "accion": "editar_reporte", "usuario": "pedro", "fecha": "2025-09-20T01:15:00", "detalle": "Reporte folio R-0003 actualizado con insumos" },
+    { "id": 4, "accion": "eliminar_reporte", "usuario": "admin", "fecha": "2025-09-21T10:00:00", "detalle": "Reporte folio R-0004 eliminado por duplicado" }
+  ]
+}
