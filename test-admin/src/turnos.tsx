@@ -10,7 +10,7 @@ import {
   SimpleForm,
   SimpleShowLayout,
   TextInput,
-  ArrayField,
+  ReferenceArrayField,
   SingleFieldList,
   ChipField,
 } from "react-admin";
@@ -30,11 +30,15 @@ export const TurnoList = () => {
         <Datagrid rowClick="show">
           <TextField source="id" label="ID" />
           <TextField source="nombre" label="Nombre del Turno" />
-          <ArrayField source="colaboradores" label="Colaboradores">
+          <ReferenceArrayField
+            source="colaboradores"
+            reference="users"
+            label="Colaboradores"
+          >
             <SingleFieldList>
-              <ChipField source="id" />
+              <ChipField source="username" />
             </SingleFieldList>
-          </ArrayField>
+          </ReferenceArrayField>
           <EditButton label="Editar" />
         </Datagrid>
       )}
@@ -80,11 +84,15 @@ export const TurnoShow = () => (
     <SimpleShowLayout>
       <TextField source="id" label="ID" />
       <TextField source="nombre" label="Nombre del Turno" />
-      <ArrayField source="colaboradores" label="Colaboradores">
+      <ReferenceArrayField
+        source="colaboradores"
+        reference="users"
+        label="Colaboradores"
+      >
         <SingleFieldList>
-          <ChipField source="id" />
+          <ChipField source="username" />
         </SingleFieldList>
-      </ArrayField>
+      </ReferenceArrayField>
     </SimpleShowLayout>
   </Show>
 );

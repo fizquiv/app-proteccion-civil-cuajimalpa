@@ -226,6 +226,15 @@ const spanishMessages: TranslationMessages = {
       },
     },
   },
+  resources: {
+    users: {
+      name: "Usuario |||| Usuarios",
+      fields: {
+        name: "Nombre",
+        email: "Correo electrónico"
+      }
+    }}
+
 };
 
 export default spanishMessages;
