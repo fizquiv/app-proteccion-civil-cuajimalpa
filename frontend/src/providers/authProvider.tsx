@@ -66,6 +66,16 @@ export const authProvider: AuthProvider = {
   // Get current user permissions
   async getPermissions() {
     const role = localStorage.getItem("userRole");
-    return role ? [role] : [];
+    const userId = localStorage.getItem("userId");
+    if (!role) return {};
+
+    return {
+      role: role,
+      userId: userId,
+      canEdit: role === "administrador" || role === "jefe_turno",
+      canDelete: role === "administrador",
+      canViewAllReports: role === "administrador",
+      canCreateReports: role === "colaborador",
+    };
   },
 };

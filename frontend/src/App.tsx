@@ -12,12 +12,8 @@ import {
   TurnoCreate,
   TurnoShow,
 } from "./resources/turnos";
-import {
-  ReporteList,
-  ReporteEdit,
-  ReporteCreate,
-  ReporteShow,
-} from "./resources/reportes";
+import { ReporteList, ReporteEdit, ReporteShow } from "./resources/reportes";
+import ReporteCreateAdvanced from "./resources/ReporteCreateAdvanced.tsx";
 import {
   InsumoList,
   InsumoEdit,
@@ -26,7 +22,7 @@ import {
 } from "./resources/insumos";
 import { LogList, LogShow } from "./resources/logs";
 
-import MyLayout from "./components/layout/Layout";
+import MyLayout from "./components/Layout.tsx";
 
 // Icons for resources
 import PeopleIcon from "@mui/icons-material/People";
@@ -35,49 +31,63 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import HistoryIcon from "@mui/icons-material/History";
 
-export const App = () => (
-  <Admin
-    dataProvider={dataProvider}
-    authProvider={authProvider}
-    layout={MyLayout}
-    i18nProvider={i18nProvider}
-  >
-    <Resource
-      name="users"
-      list={UserList}
-      edit={UserEdit}
-      create={UserCreate}
-      show={UserShow}
-      icon={PeopleIcon}
-    />
-    <Resource
-      name="turnos"
-      list={TurnoList}
-      edit={TurnoEdit}
-      create={TurnoCreate}
-      show={TurnoShow}
-      icon={ScheduleIcon}
-    />
-    <Resource
-      name="reportes"
-      list={ReporteList}
-      edit={ReporteEdit}
-      create={ReporteCreate}
-      show={ReporteShow}
-      icon={AssessmentIcon}
-    />
-    <Resource
-      name="insumos"
-      list={InsumoList}
-      edit={InsumoEdit}
-      create={InsumoCreate}
-      show={InsumoShow}
-      icon={InventoryIcon}
-    />
-    <Resource name="logs" list={LogList} show={LogShow} icon={HistoryIcon} />
+export const App = () => {
+  const userRole = localStorage.getItem("userRole");
+  const isColaborador = userRole === "colaborador";
 
-    <CustomRoutes>
-      <Route path="/home" element={<Home />} />
-    </CustomRoutes>
-  </Admin>
-);
+  return (
+    <Admin
+      dataProvider={dataProvider}
+      authProvider={authProvider}
+      layout={MyLayout}
+      i18nProvider={i18nProvider}
+    >
+      <Resource
+        name="reportes"
+        list={ReporteList}
+        edit={ReporteEdit}
+        create={ReporteCreateAdvanced}
+        show={ReporteShow}
+        icon={AssessmentIcon}
+      />
+      {!isColaborador && (
+        <>
+          <Resource
+            name="users"
+            list={UserList}
+            edit={UserEdit}
+            create={UserCreate}
+            show={UserShow}
+            icon={PeopleIcon}
+          />
+          <Resource
+            name="turnos"
+            list={TurnoList}
+            edit={TurnoEdit}
+            create={TurnoCreate}
+            show={TurnoShow}
+            icon={ScheduleIcon}
+          />
+          <Resource
+            name="insumos"
+            list={InsumoList}
+            edit={InsumoEdit}
+            create={InsumoCreate}
+            show={InsumoShow}
+            icon={InventoryIcon}
+          />
+          <Resource
+            name="logs"
+            list={LogList}
+            show={LogShow}
+            icon={HistoryIcon}
+          />
+
+          <CustomRoutes>
+            <Route path="/home" element={<Home />} />
+          </CustomRoutes>
+        </>
+      )}
+    </Admin>
+  );
+};

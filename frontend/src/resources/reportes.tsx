@@ -13,11 +13,13 @@ import {
   TimeInput,
   SelectInput,
   ReferenceInput,
+  ReferenceField,
   FormTab,
   TabbedForm,
   ArrayField,
   SingleFieldList,
   ChipField,
+  usePermissions,
 } from "react-admin";
 import { useMediaQuery, Theme } from "@mui/material";
 
@@ -43,8 +45,13 @@ const gravedadChoices = [
 
 export const ReporteList = () => {
   const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const { permissions } = usePermissions();
+  const filter = permissions?.canViewAllReports
+    ? {}
+    : { colaboradorId: permissions?.userId };
+
   return (
-    <List title="Lista de Reportes">
+    <List title="Lista de Reportes" filter={filter}>
       {isSmall ? (
         <SimpleList
           primaryText={(r) => r.folio}
@@ -60,7 +67,7 @@ export const ReporteList = () => {
           <TextField source="paciente.nombre" label="Paciente" />
           <TextField source="tipoEmergencia" label="Tipo de Emergencia" />
           <TextField source="gravedad" label="Gravedad" />
-          <EditButton label="Editar" />
+          {permissions?.canEdit && <EditButton label="Editar" />}
         </Datagrid>
       )}
     </List>
@@ -120,19 +127,25 @@ export const ReporteEdit = () => (
 );
 
 export const ReporteCreate = () => (
-  <Create title="Crear Reporte">
+  <Create
+    title="Crear Reporte"
+    transform={(data) => {
+      // Auto-assign current user as colaborador
+      const userId = localStorage.getItem("userId");
+      const userFullName = localStorage.getItem("userFullName");
+
+      return {
+        ...data,
+        colaboradorId: userId,
+        colaboradorNombre: userFullName,
+      };
+    }}
+  >
     <TabbedForm>
       <FormTab label="Información General">
         <TextInput source="folio" label="Folio" />
         <DateInput source="fecha" label="Fecha" />
         <TimeInput source="hora" label="Hora" />
-        <ReferenceInput
-          source="colaboradorId"
-          reference="users"
-          label="Colaborador"
-        >
-          <SelectInput optionText="username" />
-        </ReferenceInput>
         <ReferenceInput source="turnoId" reference="turnos" label="Turno">
           <SelectInput optionText="nombre" />
         </ReferenceInput>
@@ -177,8 +190,17 @@ export const ReporteShow = () => (
       <TextField source="folio" label="Folio" />
       <TextField source="fecha" label="Fecha" />
       <TextField source="hora" label="Hora" />
-      <TextField source="colaboradorId" label="Colaborador ID" />
-      <TextField source="turnoId" label="Turno ID" />
+      <ReferenceField
+        source="colaboradorId"
+        reference="users"
+        label="Colaborador"
+      >
+        <TextField source="fullName" />
+      </ReferenceField>
+
+      <ReferenceField source="turnoId" reference="turnos" label="Turno">
+        <TextField source="nombre" />
+      </ReferenceField>
       <TextField source="paciente.nombre" label="Nombre del Paciente" />
       <TextField source="paciente.sexo" label="Sexo" />
       <TextField source="paciente.edad" label="Edad" />

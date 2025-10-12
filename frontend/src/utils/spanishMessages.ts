@@ -174,6 +174,7 @@ const spanishMessages: TranslationMessages = {
       logged_out: "Su sesión ha terminado, por favor conéctese de nuevo.",
       not_authorized: "No está autorizado para acceder a este recurso.",
       application_update_available: "Hay una nueva versión disponible.",
+      offline: "Aplicación sin conexión",
     },
     validation: {
       required: "Requerido",
