@@ -5,7 +5,7 @@ const argon2 = require("argon2");
 
 const app = express();
 app.use(cors());
-const PORT = 3000;
+const PORT = 4000;
 let db;
 app.use(express.json());
 
@@ -66,7 +66,6 @@ app.get("/reportes", async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .project({ _id: 0 })
       .toArray();
 
     const total = await db.collection("reportes").countDocuments(mongoFilter);
@@ -83,9 +82,9 @@ app.get("/reportes", async (req, res) => {
 // Get single reporte
 app.get("/reportes/:id", async (req, res) => {
   try {
-    const data = await db
-      .collection("reportes")
-      .findOne({ id: req.params.id }, { projection: { _id: 0 } });
+    // Ensure ID is treated as string
+    const id = String(req.params.id);
+    const data = await db.collection("reportes").findOne({ _id: id });
 
     if (!data) {
       return res.status(404).json({ error: "Reporte not found" });
@@ -108,9 +107,11 @@ app.post("/reportes", async (req, res) => {
       values.folio = `R-${nextId.toString().padStart(4, "0")}`;
     }
 
-    // Generate ID if not provided
-    if (!values.id) {
-      values.id = values.folio;
+    // Generate ID for both _id and id fields
+    if (!values._id) {
+      const nextId = (await getNextSequence("reportes")).toString();
+      values._id = nextId;
+      values.id = nextId;
     }
 
     // Set timestamps
@@ -160,10 +161,10 @@ app.post("/reportes", async (req, res) => {
 
     const result = await db.collection("reportes").insertOne(values);
 
-    // Return the created document without _id
+    // Return the created document with id field
     const createdDoc = await db
       .collection("reportes")
-      .findOne({ _id: result.insertedId }, { projection: { _id: 0 } });
+      .findOne({ id: values.id });
 
     res.status(201).json(createdDoc);
   } catch (error) {
@@ -244,7 +245,7 @@ app.put("/reportes/:id", async (req, res) => {
 
     const updatedDoc = await db
       .collection("reportes")
-      .findOne({ id: req.params.id }, { projection: { _id: 0 } });
+      .findOne({ id: req.params.id });
 
     res.json(updatedDoc);
   } catch (error) {
@@ -266,7 +267,7 @@ app.get("/users", async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .project({ _id: 0, password: 0 }) // Don't return passwords
+      .project({ password: 0 }) // Don't return passwords
       .toArray();
 
     const total = await db.collection("users").countDocuments(mongoFilter);
@@ -284,7 +285,7 @@ app.get("/users/:id", async (req, res) => {
   try {
     const data = await db
       .collection("users")
-      .findOne({ id: req.params.id }, { projection: { _id: 0, password: 0 } });
+      .findOne({ _id: req.params.id }, { projection: { password: 0 } });
 
     if (!data) {
       return res.status(404).json({ error: "User not found" });
@@ -308,9 +309,11 @@ app.post("/users", async (req, res) => {
       return res.status(409).json({ error: "Username already exists" });
     }
 
-    // Generate ID if not provided
-    if (!values.id) {
-      values.id = (await getNextSequence("users")).toString();
+    // Generate ID for both _id and id fields
+    if (!values._id) {
+      const nextId = (await getNextSequence("users")).toString();
+      values._id = nextId;
+      values.id = nextId;
     }
 
     // Hash password
@@ -334,15 +337,66 @@ app.post("/users", async (req, res) => {
     // Return without password
     const createdDoc = await db
       .collection("users")
-      .findOne(
-        { _id: result.insertedId },
-        { projection: { _id: 0, password: 0 } }
-      );
+      .findOne({ _id: result.insertedId }, { projection: { password: 0 } });
 
     res.status(201).json(createdDoc);
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ error: "Error creating user" });
+  }
+});
+
+app.put("/users/:id", async (req, res) => {
+  try {
+    const values = req.body;
+
+    // Hash password if it's being updated
+    if (values.password) {
+      const hash = await argon2.hash(values.password, {
+        type: argon2.argon2id,
+        memoryCost: 19 * 1024,
+        timeCost: 2,
+        parallelism: 1,
+        saltLength: 16,
+      });
+      values.password = hash;
+    }
+
+    values.updatedAt = new Date();
+
+    const result = await db
+      .collection("users")
+      .findOneAndUpdate(
+        { _id: req.params.id },
+        { $set: values },
+        { returnDocument: "after", projection: { _id: 0, password: 0 } }
+      );
+
+    if (!result) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ error: "Error updating user" });
+  }
+});
+
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const result = await db
+      .collection("users")
+      .deleteOne({ id: req.params.id });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Error deleting user" });
   }
 });
 
@@ -359,7 +413,7 @@ app.get("/turnos", async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .project({ _id: 0 })
+
       .toArray();
 
     const total = await db.collection("turnos").countDocuments(mongoFilter);
@@ -373,12 +427,30 @@ app.get("/turnos", async (req, res) => {
   }
 });
 
+// Get single turno
+app.get("/turnos/:id", async (req, res) => {
+  try {
+    const data = await db.collection("turnos").findOne({ id: req.params.id });
+
+    if (!data) {
+      return res.status(404).json({ error: "Turno not found" });
+    }
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching turno:", error);
+    res.status(500).json({ error: "Error fetching turno" });
+  }
+});
+
 app.post("/turnos", async (req, res) => {
   try {
     const values = req.body;
 
-    if (!values.id) {
-      values.id = (await getNextSequence("turnos")).toString();
+    // Generate ID for both _id and id fields
+    if (!values._id) {
+      const nextId = (await getNextSequence("turnos")).toString();
+      values._id = nextId;
+      values.id = nextId;
     }
 
     values.isActive = true;
@@ -387,9 +459,7 @@ app.post("/turnos", async (req, res) => {
 
     const result = await db.collection("turnos").insertOne(values);
 
-    const createdDoc = await db
-      .collection("turnos")
-      .findOne({ _id: result.insertedId }, { projection: { _id: 0 } });
+    const createdDoc = await db.collection("turnos").findOne({ id: values.id });
 
     res.status(201).json(createdDoc);
   } catch (error) {
@@ -411,7 +481,7 @@ app.get("/insumos", async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .project({ _id: 0 })
+
       .toArray();
 
     const total = await db.collection("insumos").countDocuments(mongoFilter);
@@ -425,12 +495,30 @@ app.get("/insumos", async (req, res) => {
   }
 });
 
+// Get single insumo
+app.get("/insumos/:id", async (req, res) => {
+  try {
+    const data = await db.collection("insumos").findOne({ id: req.params.id });
+
+    if (!data) {
+      return res.status(404).json({ error: "Insumo not found" });
+    }
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching insumo:", error);
+    res.status(500).json({ error: "Error fetching insumo" });
+  }
+});
+
 app.post("/insumos", async (req, res) => {
   try {
     const values = req.body;
 
-    if (!values.id) {
-      values.id = (await getNextSequence("insumos")).toString();
+    // Generate ID for both _id and id fields
+    if (!values._id) {
+      const nextId = (await getNextSequence("insumos")).toString();
+      values._id = nextId;
+      values.id = nextId;
     }
 
     values.isActive = true;
@@ -441,7 +529,7 @@ app.post("/insumos", async (req, res) => {
 
     const createdDoc = await db
       .collection("insumos")
-      .findOne({ _id: result.insertedId }, { projection: { _id: 0 } });
+      .findOne({ id: values.id });
 
     res.status(201).json(createdDoc);
   } catch (error) {
@@ -463,7 +551,7 @@ app.get("/logs", async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .project({ _id: 0 })
+
       .toArray();
 
     const total = await db.collection("logs").countDocuments(mongoFilter);
@@ -474,6 +562,21 @@ app.get("/logs", async (req, res) => {
   } catch (error) {
     console.error("Error fetching logs:", error);
     res.status(500).json({ error: "Error fetching logs" });
+  }
+});
+
+// Get single log
+app.get("/logs/:id", async (req, res) => {
+  try {
+    const data = await db.collection("logs").findOne({ id: req.params.id });
+
+    if (!data) {
+      return res.status(404).json({ error: "Log not found" });
+    }
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching log:", error);
+    res.status(500).json({ error: "Error fetching log" });
   }
 });
 
@@ -490,6 +593,7 @@ app.post("/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    // Verify password using argon2
     const validPassword = await argon2.verify(user.password, password);
 
     if (!validPassword) {
@@ -507,9 +611,14 @@ app.post("/auth/login", async (req, res) => {
       ip_address: req.ip,
     });
 
+    // Create a simple JWT token (for development - use proper JWT library in production)
+    const token = Buffer.from(
+      `${user.id}:${user.username}:${Date.now()}`
+    ).toString("base64");
+
     // Return user data without password
     const { password: _, ...userData } = user;
-    res.json(userData);
+    res.json({ user: userData, token });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ error: "Error during login" });

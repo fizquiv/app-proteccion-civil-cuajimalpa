@@ -1,35 +1,34 @@
 import { AuthProvider } from "react-admin";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_JSON_SERVER_URL ||
+  "http://localhost:4000";
+
 export const authProvider: AuthProvider = {
-  async login({ username, password }) {
+  login: async ({ username, password }) => {
     try {
-      // Fetch users from the JSON server
-      const response = await fetch(
-        `${import.meta.env.VITE_JSON_SERVER_URL}/users`,
-      );
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        body: JSON.stringify({ username, password }),
+        headers: new Headers({ "Content-Type": "application/json" }),
+      });
 
-      if (!response.ok) {
-        throw new Error("No se pudo conectar con el servidor");
-      }
-
-      const users = await response.json();
-
-      // Find user with matching username and password
-      const user = users.find(
-        (u: any) => u.username === username && u.password === password,
-      );
-
-      if (!user) {
+      if (response.status < 200 || response.status >= 300) {
         throw new Error(
           "Credenciales incorrectas. Verifique su usuario y contraseña.",
         );
       }
 
-      // Store user information in localStorage
-      localStorage.setItem("username", username);
+      const { user, token } = await response.json();
+
+      // Store authentication information in localStorage (matching dataProvider)
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("username", user.username);
       localStorage.setItem("userId", user.id.toString());
       localStorage.setItem("userRole", user.role);
       localStorage.setItem("userTurnoId", user.turnoId?.toString() || "");
+      localStorage.setItem("userFullName", user.fullName || "");
 
       return Promise.resolve();
     } catch (error) {
@@ -41,41 +40,51 @@ export const authProvider: AuthProvider = {
       );
     }
   },
-  async logout() {
+
+  logout: () => {
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("username");
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
     localStorage.removeItem("userTurnoId");
+    localStorage.removeItem("userFullName");
+    return Promise.resolve();
   },
-  // called when the API returns an error
-  async checkError({ status }: { status: number }) {
+
+  checkAuth: () => {
+    const token = localStorage.getItem("auth_token");
+    const username = localStorage.getItem("username");
+    return token && username ? Promise.resolve() : Promise.reject();
+  },
+
+  checkError: (error) => {
+    const status = error.status;
     if (status === 401 || status === 403) {
+      localStorage.removeItem("auth_token");
       localStorage.removeItem("username");
       localStorage.removeItem("userId");
       localStorage.removeItem("userRole");
       localStorage.removeItem("userTurnoId");
-      throw new Error("La sesión ha expirado");
+      localStorage.removeItem("userFullName");
+      return Promise.reject();
     }
+    return Promise.resolve();
   },
-  // called when the user navigates to a new location, to check for authentication
-  async checkAuth() {
-    if (!localStorage.getItem("username")) {
-      throw new Error("Inicio de sesión requerido");
-    }
-  },
-  // Get current user permissions
-  async getPermissions() {
+
+  getPermissions: () => {
     const role = localStorage.getItem("userRole");
     const userId = localStorage.getItem("userId");
-    if (!role) return {};
+    if (!role) return Promise.resolve({});
 
-    return {
+    return Promise.resolve({
       role: role,
       userId: userId,
       canEdit: role === "administrador" || role === "jefe_turno",
       canDelete: role === "administrador",
       canViewAllReports: role === "administrador",
-      canCreateReports: role === "colaborador",
-    };
+      canCreateReports: true,
+    });
   },
 };
+
+export default authProvider;

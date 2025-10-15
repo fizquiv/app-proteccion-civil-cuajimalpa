@@ -32,9 +32,6 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 import HistoryIcon from "@mui/icons-material/History";
 
 export const App = () => {
-  const userRole = localStorage.getItem("userRole");
-  const isColaborador = userRole === "colaborador";
-
   return (
     <Admin
       dataProvider={dataProvider}
@@ -42,46 +39,59 @@ export const App = () => {
       layout={MyLayout}
       i18nProvider={i18nProvider}
     >
-      <Resource
-        name="reportes"
-        list={ReporteList}
-        edit={ReporteEdit}
-        create={ReporteCreateAdvanced}
-        show={ReporteShow}
-        icon={AssessmentIcon}
-      />
-      {!isColaborador && (
+      {(permissions) => (
         <>
+          {/* Reportes - available to all authenticated users */}
           <Resource
-            name="users"
-            list={UserList}
-            edit={UserEdit}
-            create={UserCreate}
-            show={UserShow}
-            icon={PeopleIcon}
+            name="reportes"
+            list={ReporteList}
+            edit={ReporteEdit}
+            create={ReporteCreateAdvanced}
+            show={ReporteShow}
+            icon={AssessmentIcon}
           />
-          <Resource
-            name="turnos"
-            list={TurnoList}
-            edit={TurnoEdit}
-            create={TurnoCreate}
-            show={TurnoShow}
-            icon={ScheduleIcon}
-          />
-          <Resource
-            name="insumos"
-            list={InsumoList}
-            edit={InsumoEdit}
-            create={InsumoCreate}
-            show={InsumoShow}
-            icon={InventoryIcon}
-          />
-          <Resource
-            name="logs"
-            list={LogList}
-            show={LogShow}
-            icon={HistoryIcon}
-          />
+
+          {/* Admin and Jefe de Turno resources */}
+          {permissions?.role !== "colaborador" && (
+            <>
+              <Resource
+                name="users"
+                list={UserList}
+                edit={UserEdit}
+                create={UserCreate}
+                show={UserShow}
+                icon={PeopleIcon}
+              />
+              <Resource
+                name="turnos"
+                list={TurnoList}
+                edit={TurnoEdit}
+                create={TurnoCreate}
+                show={TurnoShow}
+                icon={ScheduleIcon}
+              />
+            </>
+          )}
+
+          {permissions?.role !== "colaborador" &&
+            permissions?.role !== "jefe de turno" && (
+              <>
+                <Resource
+                  name="insumos"
+                  list={InsumoList}
+                  edit={InsumoEdit}
+                  create={InsumoCreate}
+                  show={InsumoShow}
+                  icon={InventoryIcon}
+                />
+                <Resource
+                  name="logs"
+                  list={LogList}
+                  show={LogShow}
+                  icon={HistoryIcon}
+                />
+              </>
+            )}
 
           <CustomRoutes>
             <Route path="/home" element={<Home />} />

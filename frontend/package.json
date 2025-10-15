@@ -8,8 +8,8 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint --fix --ext .js,.jsx,.ts,.tsx ./src",
     "format": "prettier --write ./src",
-    "json-server": "json-server --watch db.json --port 4000 --host localhost",
-    "dev:full": "concurrently \"npm run json-server\" \"npm run dev\""
+    "backend": "cd ../backend && npm start",
+    "dev:full": "concurrently \"npm run backend\" \"npm run dev\""
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

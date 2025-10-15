@@ -11,8 +11,10 @@ import {
   SimpleShowLayout,
   TextInput,
   ReferenceArrayField,
+  ReferenceArrayInput,
   SingleFieldList,
   ChipField,
+  AutocompleteArrayInput,
 } from "react-admin";
 import { useMediaQuery, Theme } from "@mui/material";
 
@@ -36,7 +38,7 @@ export const TurnoList = () => {
             label="Colaboradores"
           >
             <SingleFieldList>
-              <ChipField source="username" />
+              <ChipField source="fullName" />
             </SingleFieldList>
           </ReferenceArrayField>
           <EditButton label="Editar" />
@@ -51,14 +53,18 @@ export const TurnoEdit = () => (
     <SimpleForm>
       <TextInput disabled source="id" label="ID" />
       <TextInput source="nombre" label="Nombre del Turno" />
-      <TextInput
+      <TextInput source="horario" label="Horario" />
+      <ReferenceArrayInput
         source="colaboradores"
-        label="Colaboradores (IDs separados por coma)"
-        parse={(value) =>
-          value ? value.split(",").map((id: string) => parseInt(id.trim())) : []
-        }
-        format={(value) => (value ? value.join(", ") : "")}
-      />
+        reference="users"
+        label="Colaboradores"
+      >
+        <AutocompleteArrayInput
+          optionText="fullName"
+          optionValue="id"
+          label="Seleccionar Colaboradores"
+        />
+      </ReferenceArrayInput>
     </SimpleForm>
   </Edit>
 );
@@ -67,14 +73,18 @@ export const TurnoCreate = () => (
   <Create title="Crear Turno">
     <SimpleForm>
       <TextInput source="nombre" label="Nombre del Turno" />
-      <TextInput
+      <TextInput source="horario" label="Horario" />
+      <ReferenceArrayInput
         source="colaboradores"
-        label="Colaboradores (IDs separados por coma)"
-        parse={(value) =>
-          value ? value.split(",").map((id: string) => parseInt(id.trim())) : []
-        }
-        format={(value) => (value ? value.join(", ") : "")}
-      />
+        reference="users"
+        label="Colaboradores"
+      >
+        <AutocompleteArrayInput
+          optionText="fullName"
+          optionValue="id"
+          label="Seleccionar Colaboradores"
+        />
+      </ReferenceArrayInput>
     </SimpleForm>
   </Create>
 );
@@ -84,13 +94,14 @@ export const TurnoShow = () => (
     <SimpleShowLayout>
       <TextField source="id" label="ID" />
       <TextField source="nombre" label="Nombre del Turno" />
+      <TextField source="horario" label="Horario" />
       <ReferenceArrayField
         source="colaboradores"
         reference="users"
         label="Colaboradores"
       >
         <SingleFieldList>
-          <ChipField source="username" />
+          <ChipField source="fullName" />
         </SingleFieldList>
       </ReferenceArrayField>
     </SimpleShowLayout>
